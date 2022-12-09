@@ -16,10 +16,6 @@ spec:
     spec:
 
       volumes:
-      - name: kubectl
-        emptyDir: {}
-      - name: helm
-        emptyDir: {}        
       - name: shared-data
         emptyDir: {}        
 
@@ -31,7 +27,3 @@ spec:
         volumeMounts:
         - name: shared-data
           mountPath: /usr/share/nginx/html
-        - name: helm
-          mountPath: /usr/local/bin
-        - name: kubectl
-          mountPath: /usr/local/bin/kubectl
