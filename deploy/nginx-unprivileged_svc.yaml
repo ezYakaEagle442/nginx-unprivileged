@@ -6,10 +6,10 @@ metadata:
   name: nginx-unprivileged
 spec:
   ports:
-  - name: http
+  - name: HTTP
     port: 1025
-    protocol: TCP
     targetPort: 1025
+    protocol: TCP
   selector:
     app: nginx-unprivileged
   type: ClusterIP
