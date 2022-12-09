@@ -6,8 +6,8 @@ metadata:
   name: nginx-unprivileged
 spec:
   ports:
-  - name: HTTP
-    port: 1025
+  - name: http
+    port: 80
     targetPort: 1025
     protocol: TCP
   selector:

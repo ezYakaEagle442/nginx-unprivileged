@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  name: nginx-unprivileged
+spec:
+  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: nginx-unprivileged
+      port:
+        number: 80
+  rules:
+  - host: ${INGRESS_CONTROLLER_HOST_NAME}
+    http:
+      paths:
+      - backend:
+          service:
+            name: nginx-unprivileged
+            port:
+              number: 80
+        path: /
+        pathType: Exact
+status:
+  loadBalancer: {}

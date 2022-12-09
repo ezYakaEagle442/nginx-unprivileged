@@ -6,9 +6,9 @@ metadata:
   name: nginx-unprivileged
 spec:
   ports:
-  - name: HTTP
-    port: 1025
-    targetPort: 1025
+  - name: http
+    port: 80
+    targetPort: ${NGINX_PORT}
     protocol: TCP
   selector:
     app: nginx-unprivileged
