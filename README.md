@@ -152,7 +152,7 @@ https://learn.microsoft.com/en-us/azure/spring-apps/how-to-deploy-with-custom-co
 ```sh
 az spring app deploy \
    --resource-group rg-iac-asa-petclinic-mic-srv \
-   --name nginx-unprivileged \
+   --name nginx \
    --env NGINX_PORT=1025 \
    --container-image pinpindock/nginx-unprivileged \
    --service asa-petcliasa \
