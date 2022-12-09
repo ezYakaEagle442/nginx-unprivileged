@@ -27,7 +27,7 @@
 FROM ghcr.io/nginxinc/nginx-unprivileged:latest 
 
 LABEL Maintainer="pinpin <noname@microsoft.com>"
-LABEL Description="Nginx container Image as non root with a customer port 1025 by default"
+LABEL Description="Nginx container Image as non root with a configurable customer port, 1025 by default"
 
 RUN mkdir /tmp/app
 
@@ -36,12 +36,14 @@ RUN mkdir /tmp/app
 # /usr/local/nginx/conf, /etc/nginx, or /usr/local/etc/nginx.
 
 # /§\ DEFAULT_CONF_FILE="/etc/nginx/conf.d/default.conf"
-COPY index2.html /usr/share/nginx/html
-COPY dashboard.html /usr/share/nginx/html
-COPY demo-index.html /usr/share/nginx/html
+RUN mkdir /tmp/nginx
+RUN mkdir /tmp/nginx/html
+COPY index.html /tmp/nginx/html
+COPY index2.html /tmp/nginx/html
+COPY dashboard.html /tmp/nginx/html
+COPY demo-index.html /tmp/nginx/html
 COPY deploy/nginx.conf /etc/nginx/
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
-RUN mkdir /tmp/nginx
 RUN touch /tmp/nginx/nginx.pid
 
 EXPOSE ${NGINX_PORT}
