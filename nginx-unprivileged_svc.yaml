@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx-unprivileged
+  name: nginx-unprivileged
+spec:
+  ports:
+  - name: http
+    port: ${NGINX_PORT}
+    protocol: TCP
+    targetPort: ${NGINX_PORT}
+  selector:
+    app: nginx-unprivileged
+  type: ClusterIP
+status:
+  loadBalancer: {}

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-unprivileged
+  name: nginx-unprivileged
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-unprivileged
+  template:
+    metadata:
+      labels:
+        app: nginx-unprivileged
+    spec:
+
+      volumes:
+      - name: kubectl
+        emptyDir: {}
+      - name: helm
+        emptyDir: {}        
+      - name: shared-data
+        emptyDir: {}        
+
+      containers:
+      - image: pinpindock/nginx-unprivileged # https://hub.docker.com/r/pinpindock/nginx-unprivileged
+        name: nginx-unprivileged
+        ports:
+        - containerPort: ${NGINX_PORT}
+        volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+        - name: helm
+          mountPath: /usr/local/bin
+        - name: kubectl
+          mountPath: /usr/local/bin/kubectl
