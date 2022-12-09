@@ -16,14 +16,22 @@ spec:
     spec:
 
       volumes:
-      - name: shared-data
+      - name: shared-unprivileged
         emptyDir: {}        
+      - name: nginx-root
+        emptyDir: {}
+      - name: etc-nginx
+        emptyDir: {}
 
       containers:
-      - image: pinpindock/nginx-unprivileged # https://hub.docker.com/r/pinpindock/nginx-unprivileged
-        name: nginx-unprivileged
+      - name: nginx-unprivileged
+        image: pinpindock/nginx-unprivileged # https://hub.docker.com/r/pinpindock/nginx-unprivileged      
         ports:
         - containerPort: ${NGINX_PORT}
         volumeMounts:
-        - name: shared-data
+        - name: shared-unprivileged
+          mountPath: /tmp/nginx
+        - name: nginx-root
           mountPath: /usr/share/nginx/html
+        - name: etc-nginx
+          mountPath: /etc/nginx/
