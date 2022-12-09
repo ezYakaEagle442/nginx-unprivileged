@@ -9,9 +9,7 @@ Nginx container Image as non root with a customer port 1025 by default
 export NGINX_PORT=1025
 envsubst < Dockerfile > deploy/Dockerfile
 envsubst < nginx-unprivileged.yaml > deploy/nginx-unprivileged.yaml
-envsubst < nginx-unprivileged_svc.yaml > deploy/nginx-unprivileged_svc.yaml
 
-# envsubst < nginx.conf > deploy/nginx.conf
 cp nginx.conf deploy/nginx.conf
 sed -i "s/\$NGINX_PORT/$NGINX_PORT/g" "deploy/nginx.conf"
 ```
@@ -30,6 +28,8 @@ docker image ls
 docker run -it -p ${NGINX_PORT}:${NGINX_PORT} --env NGINX_PORT=${NGINX_PORT} nginx-unprivileged
 docker inspect nginx-unprivileged '{{ ..[0].Config.ExposedPorts }}'
 docker container ls
+
+docker exec -it -p ${NGINX_PORT}:${NGINX_PORT} --env NGINX_PORT=${NGINX_PORT} nginx-unprivileged -- sh
 ```
 
 ## Test from inside the container or from your browser
@@ -37,6 +37,7 @@ docker container ls
 
 nginx -t
 cat /etc/nginx/nginx.conf
+ls -al /tmp/nginx/html
 nginx -s reload
 
 curl -X GET http://localhost:1025/index.html
@@ -66,9 +67,33 @@ docker push "myusername"/nginx-unprivileged # https://hub.docker.com/r/pinpindoc
 https://kubernetes.io/docs/tasks/inject-data-application/define-interdependent-environment-variables/
 
 ```sh
-kubectl create service clusterip nginx-unprivileged --tcp=${NGINX_PORT}:${NGINX_PORT} --dry-run=client -o yaml > nginx-unprivileged_svc.yaml
+#kubectl create service clusterip nginx-unprivileged --tcp=${NGINX_PORT}:${NGINX_PORT} --dry-run=client -o yaml > nginx-unprivileged_svc.yaml
+envsubst < nginx-unprivileged_svc.yaml > deploy/nginx-unprivileged_svc.yaml
 # https://kubernetes.io/docs/concepts/services-networking/service/#environment-variables
 kubectl apply -f deploy/nginx-unprivileged_svc.yaml
+
+kubectl create namespace ingress
+# helm uninstall ingress -n ingress
+helm ls --namespace ingress
+
+helm install ingress-nginx ingress-nginx/ingress-nginx
+--create-namespace
+--namespace $NAMESPACE
+--set controller.service.annotations."service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path"=/healthz
+
+kubectl get services -n ingress -o wide ingress-nginx-ingress-controller -w
+ing_ctl_ip=$(kubectl get svc -n ingress ingress-nginx-controller -o jsonpath="{.status.loadBalancer.ingress[*].ip}")
+echo $ing_ctl_ip
+
+# DNS Zone In the Azure portal, go to All services / Public IP addresses / kubernetes-xxxx - Configuration ( the Ingress Controller IP) , (you will also find this PIP in AKS MC_ RG) then there is a field "DNS name label (optional)" ==> An "A record" that starts with the specified label and resolves to this public IP address will be registered with the Azure-provided DNS servers. Example: team5rocks.westeurope.cloudapp.azure.com team5rocks.westus.cloudapp.azure.com
+
+INGRESS_CONTROLLER_HOST_NAME="team5rocks.westus.cloudapp.azure.com"
+# kubectl create ing nginx-unprivileged --rule="${INGRESS_CONTROLLER_HOST_NAME}/=nginx-unprivileged:${NGINX_PORT}" # --default-backend="nginx-unprivileged:${NGINX_PORT}" --dry-run=client -o yaml > nginx-unprivileged_ing.yaml
+
+envsubst < nginx-unprivileged_ing.yaml > deploy/nginx-unprivileged_ing.yaml
+kubectl apply -f deploy/nginx-unprivileged_ing.yaml
+kubectl get ing -o wide
+kubectl describe ing nginx-unprivileged
 
 #kubectl create deployment nginx-unprivileged --image=nginx-unprivileged --replicas=1 --port=80 --dry-run=client -o yaml > nginx-unprivileged.yaml
 #kubectl create configmap cm-cfg --from-literal=nginx.port=${NGINX_PORT}
@@ -102,6 +127,8 @@ service nginx status
 
 nginx -t
 cat /etc/nginx/nginx.conf
+ls -al /usr/share/nginx/html #belongs to root ....
+ls -al /tmp/nginx/html
 nginx -s reload
 #nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 #nginx: configuration file /etc/nginx/nginx.conf test is successful
